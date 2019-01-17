@@ -1,0 +1,965 @@
+/*
+ * TCSS 305 - Assignment 6: Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import javax.swing.event.MouseInputAdapter;
+import model.Board;
+import model.TetrisPiece;
+
+/**
+ * This is the GUI of the Tetris project.
+ * @author Ruitao Yu
+ * @version December 5 2017
+ *
+ */
+public class TetrisGUI extends JFrame implements Observer {
+    
+    /** Number of lines that need to be canceled before level up. */
+    public static final int DEFAULT_LINE_TO_LEVEL = 5;
+    
+    /** The delay of the timer. */
+    public static final int DELAY = 1000;
+    
+    /** the scoring base. */
+    public static final int[] SCORE_LIST = {40, 100, 300, 1200};
+
+    /** The delay deduction when level up. */
+    public static final int DELAY_DEDUCTION = 50;
+    
+    /** Size of the array. */
+    public static final int ARRAY_SIZE = 5;
+    
+    /** the number of square in a row. */
+    public static final int SCORE_FOR_ONE_PIECE = 4;
+    
+    /** The default width of the board game panel. */
+    public static final int DEFAULT_WIDTH = 350;
+    
+    /** The default height of the board game panel. */
+    public static final int DEFAULT_HEIGHT = 700;
+    
+    /** the text description of the second color menu item. */
+    public static final String WIN_ICON_DIR = "images/tetris_dribbble.png";
+
+    /** the UW Tacoma icon. */
+    public static final Icon ICON = new ImageIcon(WIN_ICON_DIR);
+    
+    /** the image icon for the pop up window. */
+    public static final ImageIcon POP_ICON = new ImageIcon("images/pop.png");
+    
+    /** the string that present the second player. */
+    public static final String[] PLAYER_LIST = {"Player 1", "Player 2"};
+    
+    /** serial number. */
+    private static final long serialVersionUID = -3085923302014793773L;
+    
+    /** The panel for the game of player two. */
+    private VisualBoard myPlayerTwoGamePanel;
+
+    /** The panel for the next piece of player twos. */
+    private NextBoard myPlayerTwoNextPanel;
+    
+    /** The panel for the next piece of player two. */
+    private ScoreBoard myPlayerTwoScorePanel;
+    
+    /** The extra panel for the next piece of player two. */
+    private ScoreBoard myExtraPlayerTwoScorePanel;
+    
+    /** The panel for the game. */
+    private VisualBoard myGamePanel;
+
+    /** The panel for the next piece. */
+    private NextBoard myNextPanel;
+    
+    /** The panel for the next piece. */
+    private ScoreBoard myScorePanel;
+    
+    /** The panel for the next piece. */
+    private ScoreBoard myExtraScorePanel;
+    
+    /** The back end board for the game. */
+    private Board myBoard;
+    
+    /** The back end board for the game of player two. */
+    private Board myPlayerTwoBoard;
+    
+    /** The timer for the game. */
+    private Timer myTimer;
+    
+    /** The timer for the game of player two. */
+    private Timer myPlayerTwoTimer;
+
+    /** show if the key is enable. */
+    private boolean myKey;
+    
+    /** the key value associate to the controls. */
+    private int[] myKeyValues = new int[ARRAY_SIZE];
+
+    /** my sound effects. */
+    private SoundEffect mySoundEffect;
+
+    /** have play two or not. */
+    private boolean myIsTwoPlayer;
+    
+    /** the map contains all the usable key. */
+    private final Map<Integer, Runnable> myKeyMap = new HashMap<Integer, Runnable>();
+    
+    /** the first player's panel. */
+    private JPanel myPlayerOnePanel;
+    
+    /** the second player's panel. */
+    private JPanel myPlayerTwoPanel;
+    
+    /** the width of this panel. */
+    private int myWidth;
+    
+    /** the height of this panel. */
+    private int myHeight;
+
+    /** the menu bar of this window. */
+    private MenuBar myMenuBar;
+
+    /**
+     * The constructor.
+     */
+    public TetrisGUI() {
+        super("Teris");
+        setUpInterface();
+    }
+    
+    /**
+     * the method sets up the game.
+     */
+    private void setUpInterface() {
+        myWidth = DEFAULT_WIDTH;
+        myHeight = DEFAULT_HEIGHT;
+        
+        // set the base status of this window
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        // set a Icon for this window
+        final Image image = Toolkit.getDefaultToolkit().getImage(WIN_ICON_DIR);
+        setIconImage(image);
+        addKeyListener(new KeyAction());
+        
+        // Sound effect
+        mySoundEffect = new SoundEffect();   
+        
+        // disable the keyboard
+        myIsTwoPlayer = false;
+        myKey = false;
+        myBoard = new Board();
+        myBoard.newGame();
+        myPlayerTwoBoard = new Board();
+        myPlayerTwoBoard.newGame();
+
+        // set up a timer
+        myTimer = new Timer(DELAY, new TimeAction());
+        myPlayerTwoTimer = new Timer(DELAY, new PlayerTwoTimeAction());
+        
+        // set up player one and two panels
+        myPlayerOnePanel = new JPanel();
+        myPlayerOnePanel.setLayout(new BorderLayout());
+        myPlayerTwoPanel = new JPanel();
+        myPlayerTwoPanel.setLayout(new BorderLayout());
+        
+        // set up all the window components
+        setUpBoardPanel();
+        setUpRightPanel();
+        addPlayerTwoPanel();
+        
+        // initialize the game board
+        add(myPlayerOnePanel, BorderLayout.WEST);
+        
+        
+        //setMenuBar();
+        myMenuBar = new MenuBar(this, myTimer, myPlayerTwoTimer, mySoundEffect);
+        myMenuBar.activeMenuControlButtons(false);
+        myMenuBar.activePlayerButtons(false);
+        setJMenuBar(myMenuBar);
+        
+        // finalize the window
+        setResizable(false);
+        pack();
+        setVisible(true);
+    }
+    
+    /**
+     * update the score based on how many line is canceled.
+     * @param thePanel the score board that need to be update
+     * @param theLines the number of line is canceled
+     */
+    private void updateScorceLineCancel(final ScoreBoard thePanel, final int theLines) {
+        // update the clear line, if the lines just cleared is more then or equals
+        // to the lines need to level up, level up. otherwise, just update the score
+        thePanel.setMyCancelLine(theLines);
+        final int toLevelUp = thePanel.getMyToLevelUp();
+        if (theLines - toLevelUp >= 0) {
+            updateScoreBoard(thePanel, theLines);
+            thePanel.setMyLevel();
+            thePanel.setMyToLevelUp();
+        } else {
+            updateScoreBoard(thePanel, theLines);
+            thePanel.setMyToLevelUp();
+        }
+        thePanel.repaint();
+    }
+    
+    /**
+     * update the score based on how many line is cleared.
+     * @param thePanel the score board that need to be update
+     * @param theLines the number of line is canceled
+     */
+    private void updateScoreBoard(final ScoreBoard thePanel, final int theLines) {
+        thePanel.setMyScore(thePanel.getMyScore() 
+                            + SCORE_LIST[theLines - 1] * thePanel.getMyLevel());
+    }
+    
+    
+    /**
+     * add 4 points to the score if the piece is drop.
+     * @param thePanel the score board that need to be update
+     */
+    private void updateScorceDropPiece(final ScoreBoard thePanel) {
+        final int count = thePanel.getMyCount();
+        thePanel.setMyCount(thePanel.getMyCount() + 1);
+        if (count >= 2) {
+            thePanel.setMyScore(thePanel.getMyScore() + SCORE_FOR_ONE_PIECE);
+        }
+        thePanel.repaint();
+    }
+    
+    /**
+     * add the second play's board to the window.
+     */
+    private void addPlayerTwoPanel() {
+        setUpPlayerTwoBoardPanel();
+        setUpPlayerTwoRightPanel();
+        add(myPlayerTwoPanel, BorderLayout.EAST);
+    }
+
+    /**
+     * switch between one player and two players.
+     * @param theIsTwoPlayer is two player or not
+     */
+    public void twoPlayerMode(final boolean theIsTwoPlayer) {
+        myPlayerTwoPanel.setVisible(theIsTwoPlayer);
+    }
+
+    /**
+     * this is the map for one player.
+     */
+    public void setUpOnePlayMap() {
+        myKeyMap.clear();
+        myKeyMap.put(KeyEvent.VK_W, () -> doRotate(myBoard));
+        myKeyMap.put(KeyEvent.VK_S, () -> doDown(myBoard));
+        myKeyMap.put(KeyEvent.VK_A, () -> doLeft(myBoard));
+        myKeyMap.put(KeyEvent.VK_D, () -> doRight(myBoard));
+        myKeyMap.put(KeyEvent.VK_SPACE, () -> doDrop(myBoard));
+        myKeyMap.put(KeyEvent.VK_P, () -> doStop());
+        myKeyMap.put(KeyEvent.VK_O, () -> doContinue());
+        myKeyMap.put(KeyEvent.VK_M, () -> doMute());
+    }
+    
+    /**
+     * this is the map for one player.
+     */
+    public void setUpTwoPlayMap() {
+        myKeyMap.clear();
+        myKeyMap.put(KeyEvent.VK_W, () -> doRotate(myBoard));
+        myKeyMap.put(KeyEvent.VK_S, () -> doDown(myBoard));
+        myKeyMap.put(KeyEvent.VK_A, () -> doLeft(myBoard));
+        myKeyMap.put(KeyEvent.VK_D, () -> doRight(myBoard));
+        myKeyMap.put(KeyEvent.VK_UP, () -> doRotate(myPlayerTwoBoard));
+        myKeyMap.put(KeyEvent.VK_DOWN, () -> doDown(myPlayerTwoBoard));
+        myKeyMap.put(KeyEvent.VK_LEFT, () -> doLeft(myPlayerTwoBoard));
+        myKeyMap.put(KeyEvent.VK_RIGHT, () -> doRight(myPlayerTwoBoard));
+        myKeyMap.put(KeyEvent.VK_ENTER, () -> doDrop(myPlayerTwoBoard));
+        myKeyMap.put(KeyEvent.VK_SPACE, () -> doDrop(myBoard));
+        myKeyMap.put(KeyEvent.VK_P, () -> doStop());
+        myKeyMap.put(KeyEvent.VK_O, () -> doContinue());
+        myKeyMap.put(KeyEvent.VK_M, () -> doMute());
+    }
+
+    /**
+     * when the game is over.
+     * @param theWinner the name of the winner.
+     */
+    public void endGame(final String theWinner) {
+        // when over, stop the music, display a window depends on what mode is on
+        // then check the highest score and disable all keys.
+        mySoundEffect.stopBGM();
+        stopTimer();
+        if (myIsTwoPlayer && theWinner != null) {
+            JOptionPane.showMessageDialog(this
+                                          , theWinner + " is the Winner! \n" 
+                                          + "Congratulations!"
+                                          , "Game Winner"
+                                          , JOptionPane.PLAIN_MESSAGE
+                                          , ICON);
+        } else {
+            
+            JOptionPane.showMessageDialog(this
+                                          , "Game Over! \n" 
+                                          + "Good Luck next time!"
+                                          , "Game Over"
+                                          , JOptionPane.PLAIN_MESSAGE
+                                          , ICON);
+        }
+        checkHighest();
+        myMenuBar.activeMenuControlButtons(false);
+        activeKey(false);
+    }
+
+  
+    /**
+     * create a button that can be modified the controls keys.
+     * @param theControl the control menu
+     * @param theName the name text of this menu item
+     * @param theKey the key value
+     */
+    public void modifyButtons(final JMenu theControl, final String theName
+                               , final int theKey) {
+        final JMenuItem button = new JMenuItem(theName);
+        button.setMnemonic(theKey);
+        // attach the menu item to a action listener
+        button.addActionListener(event -> {
+            final String name = ((JMenuItem) event.getSource()).getText();
+            
+            final String newName = 
+                            JOptionPane.showInputDialog("Enter the key you want to set " 
+                            + name.substring(name.indexOf(' ') + 1) 
+                            + "\n" + "Can only accept letters and numbers.");
+
+            // if the input's length is 1
+            // get the value of the input in integer value
+            // put the value in the list
+            if (newName != null) {
+                final String upperName = newName.toUpperCase(Locale.ENGLISH);
+                final int value = upperName.charAt(0);
+                if (upperName.length() > 1 || myKeyMap.containsKey(value)) {
+                    if (upperName.length() > 1) {
+                        // if the length is greater than 1, show a message
+                        JOptionPane.showMessageDialog(this
+                                                      , "You just enter a wrong input. "
+                                                                      + "Please try again!");
+                    }
+                    // check if the key value is in the list already
+                    if (myKeyMap.containsKey(value)) {
+                        JOptionPane.showMessageDialog(this, "The key you enter is already"
+                                        + " used. Please try another one");
+                    }
+                    return;
+                }
+                // set the text
+                changeText(name, upperName, value);
+            } 
+        });
+        theControl.add(button);
+    }
+    
+    /**
+     * set the text in the list to be a new one.
+     * @param theName the name of the set menu item
+     * @param theUpperName the new key value as a string
+     * @param theValue the new key value as a integer
+     */
+    private void changeText(final String theName
+                            , final String theUpperName
+                            , final int theValue) {
+        if (theName.contains("rotate")) {
+            myKeyMap.remove(myKeyValues[0]);
+            myKeyMap.put(theValue, () -> doRotate(myBoard));
+            myKeyValues[0] = theValue;
+            myScorePanel.changeText(0, theUpperName);
+            myExtraScorePanel.changeText(0, theUpperName);
+        } else if (theName.contains("down")) {
+            myKeyMap.remove(myKeyValues[1]);
+            myKeyMap.put(theValue, () -> doDown(myBoard));
+            myKeyValues[1] = theValue;
+            myScorePanel.changeText(1, theUpperName);
+            myExtraScorePanel.changeText(1, theUpperName);
+        } else if (theName.contains("left")) {
+            myKeyMap.remove(myKeyValues[2]);
+            myKeyMap.put(theValue, () -> doLeft(myBoard));
+            myKeyValues[2] = theValue;
+            myScorePanel.changeText(2, theUpperName);
+            myExtraScorePanel.changeText(2, theUpperName);
+        } else if (theName.contains("right")) {
+            myKeyMap.remove(myKeyValues[2 + 1]);
+            myKeyMap.put(theValue, () -> doRight(myBoard));
+            myKeyValues[2 + 1] = theValue;
+            myScorePanel.changeText(2 + 1, theUpperName);
+            myExtraScorePanel.changeText(2 + 1, theUpperName);
+        } else if (theName.contains("drop")) {
+            myKeyMap.remove(myKeyValues[2 + 2]);
+            myKeyMap.put(theValue, () -> doDrop(myBoard));
+            myKeyValues[2 + 2] = theValue;
+            myScorePanel.changeText(2 + 2, theUpperName);
+            myExtraScorePanel.changeText(2 + 2, theUpperName);
+
+        }
+    }
+
+    /**
+     * the method sets up the next piece panel.
+     */
+    private void setUpRightPanel() {
+        // the control panel contains the next piece panel and button panel
+        // the next piece panel shows the next piece
+        final JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BorderLayout());
+        myNextPanel = new NextBoard(myHeight);
+        myScorePanel = new ScoreBoard(this , myWidth, myHeight, PLAYER_LIST[1]);
+        myExtraScorePanel = new ScoreBoard(this , myWidth, myHeight, PLAYER_LIST[1]);
+        myScorePanel.setText("W", "S", "A", "D", "SPACE");
+        myExtraScorePanel.setText("W ", "S ", "A ", "D ", "SPACE ");
+        final JLabel imgLabel = new JLabel(POP_ICON);
+        imgLabel.addMouseListener(new MyMouseInputAdapter());
+        myScorePanel.add(imgLabel);
+        
+        // add the panels to there parent
+        controlPanel.add(myNextPanel, BorderLayout.NORTH);
+        controlPanel.add(myScorePanel, BorderLayout.SOUTH);
+        myPlayerOnePanel.add(controlPanel, BorderLayout.EAST);
+        
+        myBoard.addObserver((Observer) myNextPanel);
+    }
+    
+    
+    /**
+     * this method sets up the game board.
+     */
+    private void setUpBoardPanel() {
+        // the board panel of this game
+        // add it to the west of the window border
+        myGamePanel = new VisualBoard(myWidth , myHeight);
+        myPlayerOnePanel.add(myGamePanel, BorderLayout.WEST);
+        myBoard.addObserver((Observer) myGamePanel);
+        myBoard.addObserver((Observer) this);
+    }
+    
+    /**
+     * the method sets up the next piece panel.
+     */
+    private void setUpPlayerTwoRightPanel() {
+        final JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BorderLayout());
+        myPlayerTwoNextPanel = new NextBoard(myHeight);
+        myPlayerTwoScorePanel = new ScoreBoard(this , myWidth, myHeight, PLAYER_LIST[0]);
+        myExtraPlayerTwoScorePanel = new ScoreBoard(this , myWidth, myHeight, PLAYER_LIST[0]);
+        myPlayerTwoScorePanel.setText("UP ARROW", "DOWN ARROW"
+                                      , "LEFT ARROW", "RIGHT ARROW", "ENTER");
+        myExtraPlayerTwoScorePanel.setText("UP ARROW ", "DOWN ARROW "
+                                           , "LEFT ARROW ", "RIGHT ARROW ", "ENTER ");
+        
+        final JLabel imgLabel = new JLabel(POP_ICON);
+        imgLabel.addMouseListener(new MyMouseInputAdapter());
+        myPlayerTwoScorePanel.add(imgLabel);
+        
+        // add the panels to there parent
+        controlPanel.add(myPlayerTwoNextPanel, BorderLayout.NORTH);
+        controlPanel.add(myPlayerTwoScorePanel, BorderLayout.SOUTH);
+        myPlayerTwoPanel.add(controlPanel, BorderLayout.WEST);
+        
+        myPlayerTwoBoard.addObserver((Observer) myPlayerTwoNextPanel);
+    }
+    
+    /**
+     * this method sets up the game board.
+     */
+    private void setUpPlayerTwoBoardPanel() {
+        // the board panel of this game
+        // add it to the west of the window border
+        myPlayerTwoGamePanel = new VisualBoard(myWidth , myHeight);
+        myPlayerTwoPanel.add(myPlayerTwoGamePanel, BorderLayout.EAST);
+        myPlayerTwoBoard.addObserver((Observer) myPlayerTwoGamePanel);
+        myPlayerTwoBoard.addObserver((Observer) this);
+    }
+    
+    /**
+     * method to start the game.
+     */
+    public void startGame() {
+        // start a new game and enable the buttons
+        // start the timer
+        setScoreZero();
+        myBoard.newGame();
+        activeKey(true);
+        myTimer.start();
+        if (myIsTwoPlayer) {
+            myPlayerTwoBoard.newGame();
+            myPlayerTwoTimer.start();
+        }
+    }
+    
+    /**
+     * enable the buttons.
+     * @param theKey if the button is enable.
+     */
+    public void activeKey(final boolean theKey) {
+        myKey = theKey;
+    }
+    
+    /**
+     * enable the buttons.
+     * @param theKey if the button is enable.
+     */
+    public void activeButton(final boolean theKey) {
+        myMenuBar.activeMenuControlButtons(theKey);
+    }
+    
+    /**
+     * start the timer.
+     */
+    public void startTimer() {
+        myTimer.start();
+        if (myIsTwoPlayer) {
+            myPlayerTwoTimer.start();
+        }
+    }
+    
+    /**
+     * stop the timer.
+     */
+    public void stopTimer() {
+        myTimer.stop();
+        if (myIsTwoPlayer) {
+            myPlayerTwoTimer.stop();
+        }
+    }
+    
+    /**
+     * see if it is on 2 players mode.
+     * @return is 2 player mode or not.
+     */
+    public boolean isTwoPlayer() {
+        return myIsTwoPlayer;
+    }
+    
+    /**
+     * @return the defaultLineToLevel
+     */
+    public int getDefaultLineToLevel() {
+        return DEFAULT_LINE_TO_LEVEL;
+    }
+    
+    /**
+     * @param theIsTwoPlayer the myIsTwoPlayer to set
+     */
+    public void setMyIsTwoPlayer(final boolean theIsTwoPlayer) {
+        myIsTwoPlayer = theIsTwoPlayer;
+    }
+
+    /**
+     * speed up the timer by 50 if level up.
+     */
+    public void speedUpPlayerOneTimer() {
+        myTimer.setDelay(myTimer.getDelay() - DELAY_DEDUCTION);
+    }
+    
+    /**
+     * speed up the timer by 50 if level up.
+     */
+    public void speedUpPlayerTwoTimer() {
+        myPlayerTwoTimer.setDelay(myPlayerTwoTimer.getDelay() - DELAY_DEDUCTION);
+    }
+    
+    /**
+     * set the score to 0.
+     */
+    public void setScoreZero() {
+        myScorePanel.resetAllScore();
+        myExtraScorePanel.resetAllScore();
+        myPlayerTwoScorePanel.resetAllScore();
+        myExtraPlayerTwoScorePanel.resetAllScore();
+        myTimer.setDelay(DELAY);
+        myPlayerTwoTimer.setDelay(DELAY);
+    }
+    
+    /**
+     * @return the myWidth
+     */
+    public int getMyWidth() {
+        return myWidth;
+    }
+
+    /**
+     * @param theWidth the myWidth to set
+     */
+    public void setMyWidth(final int theWidth) {
+        myWidth = theWidth;
+    }
+
+    /**
+     * @param theHeight the myHeight to set
+     */
+    public void setMyHeight(final int theHeight) {
+        myHeight = theHeight;
+    }
+
+    /**
+     * @return the myHeight
+     */
+    public int getMyHeight() {
+        return myHeight;
+    }
+
+    /**
+     * @return the myPlayerTwoGamePanel
+     */
+    public VisualBoard getMyPlayerTwoGamePanel() {
+        return myPlayerTwoGamePanel;
+    }
+
+    /**
+     * @return the myPlayerTwoNextPanel
+     */
+    public NextBoard getMyPlayerTwoNextPanel() {
+        return myPlayerTwoNextPanel;
+    }
+
+    /**
+     * @return the myPlayerTwoScorePanel
+     */
+    public ScoreBoard getMyPlayerTwoScorePanel() {
+        return myPlayerTwoScorePanel;
+    }
+
+    /**
+     * @return the myExtraPlayerTwoScorePanel
+     */
+    public ScoreBoard getMyExtraPlayerTwoScorePanel() {
+        return myExtraPlayerTwoScorePanel;
+    }
+
+    /**
+     * @return the myGamePanel
+     */
+    public VisualBoard getMyGamePanel() {
+        return myGamePanel;
+    }
+
+    /**
+     * @return the myNextPanel
+     */
+    public NextBoard getMyNextPanel() {
+        return myNextPanel;
+    }
+
+    /**
+     * @return the myScorePanel
+     */
+    public ScoreBoard getMyScorePanel() {
+        return myScorePanel;
+    }
+
+    /**
+     * @return the myExtraScorePanel
+     */
+    public ScoreBoard getMyExtraScorePanel() {
+        return myExtraScorePanel;
+    }
+
+    /**
+     * @return the myPlayerOnePanel
+     */
+    public JPanel getMyPlayerOnePanel() {
+        return myPlayerOnePanel;
+    }
+
+    /**
+     * @return the myPlayerTwoPanel
+     */
+    public JPanel getMyPlayerTwoPanel() {
+        return myPlayerTwoPanel;
+    }
+
+    /**
+     * Responds to a down key pressed.
+     * @param theBoard the game board
+     */
+    private void doDown(final Board theBoard) {
+        mySoundEffect.playMove();
+        theBoard.down();
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     * * @param theBoard the game board
+     */
+    private void doRotate(final Board theBoard) {
+        mySoundEffect.playRotate();
+        theBoard.rotateCW();
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     * * @param theBoard the game board
+     */
+    private void doLeft(final Board theBoard) {
+        mySoundEffect.playMove();
+        theBoard.right();
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     * * @param theBoard the game board
+     */
+    private void doRight(final Board theBoard) {
+        mySoundEffect.playMove();
+        theBoard.left();
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     * * @param theBoard the game board
+     */
+    private void doDrop(final Board theBoard) {
+        mySoundEffect.playDrop();
+        theBoard.drop();
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     */
+    private void doStop() {
+        stopTimer();
+        activeKey(false);
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     */
+    private void doContinue() {
+        startTimer();
+        activeKey(true);
+    }
+    
+    /**
+     * Responds to a down key pressed.
+     */
+    private void doMute() {
+        mySoundEffect.mute();
+    }
+
+    @Override
+    public void update(final Observable theO, final Object theObject) {
+        // if the object is a piece, update the graphics 
+        if (theObject instanceof TetrisPiece) {
+            if (theO.equals(myBoard)) {
+                updateScorceDropPiece(myScorePanel);
+                updateScorceDropPiece(myExtraScorePanel);
+            } else {
+                updateScorceDropPiece(myPlayerTwoScorePanel);
+                updateScorceDropPiece(myExtraPlayerTwoScorePanel);
+            }
+        } else if (theObject instanceof Integer[]) { // if is a integer, update score
+            final int lines = ((Integer[]) theObject).length;
+            
+            if (theO.equals(myBoard)) {
+                updateScorceLineCancel(myScorePanel, lines);
+                updateScorceLineCancel(myExtraScorePanel, lines);
+            } else {
+                updateScorceLineCancel(myPlayerTwoScorePanel, lines);
+                updateScorceLineCancel(myExtraPlayerTwoScorePanel, lines);
+            }
+        }  else if (theObject instanceof Boolean) { // if a boolean end the game
+            
+            if (theO.equals(myBoard)) {
+                endGame(myScorePanel.getMyPlayerName());
+            } else {
+                endGame(myPlayerTwoScorePanel.getMyPlayerName());
+            }
+        }
+        
+    }
+    
+    /**
+     * check if there is a new record.
+     */
+    public void checkHighest() {
+        final int highest = myScorePanel.getMyHighestScore();
+        final int playerOneScore = myScorePanel.getMyScore();
+        final int playerTwoScore = myPlayerTwoScorePanel.getMyScore();
+        if (playerOneScore > highest || playerTwoScore > highest) {
+            final int higher = Integer.max(playerOneScore, playerTwoScore);
+            myScorePanel.setMyHighestScore(higher);
+            myExtraScorePanel.setMyHighestScore(higher);
+            myPlayerTwoScorePanel.setMyHighestScore(higher);
+            myExtraPlayerTwoScorePanel.setMyHighestScore(higher);
+        }
+
+        myScorePanel.repaint();
+        myExtraScorePanel.repaint();
+        myPlayerTwoScorePanel.repaint();
+        myExtraPlayerTwoScorePanel.repaint();
+    }
+
+    /**
+     * the action for the timer.
+     * @author Ruitao Yu
+     * @version November 18 2017
+     */
+    class TimeAction implements ActionListener {
+
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            // move the game to the next step
+            myBoard.step();
+        }
+    }
+    
+    /**
+     * the action for the timer.
+     * @author Ruitao Yu
+     * @version November 18 2017
+     *
+     */
+    class PlayerTwoTimeAction implements ActionListener {
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            // move the game to the next step
+            myPlayerTwoBoard.step();
+        }
+        
+    }
+    
+    /**
+     * the key action for the keyboard.
+     * @author Ruitao Yu
+     * @version November 18 2017
+     *
+     */
+    class KeyAction implements KeyListener {
+        @Override
+        public void keyTyped(final KeyEvent etheEvent) {
+           
+        }
+
+        @Override
+        public void keyPressed(final KeyEvent theEvent) {
+            // if the keys are enable
+            // see if it match any of these
+            if (myKey) {
+                final int pressedKey = theEvent.getKeyCode();
+                if (myKeyMap.containsKey(pressedKey)) {
+                    myKeyMap.get(pressedKey).run();
+                }
+            }
+        }
+
+        @Override
+        public void keyReleased(final KeyEvent theEvent) {
+            if (!myKey && theEvent.getKeyCode() == KeyEvent.VK_O) {
+                doContinue();
+            }
+        }
+    }
+    
+    /**
+     * the mouse adapter.
+     * @author Ruitao Yu
+     * @version December 5 2017
+     *
+     */
+    class MyMouseInputAdapter extends MouseInputAdapter {
+
+        /** the temporary board to show the score. */
+        private final JFrame myTempScoreBoard;
+        
+        /**
+         * Constructor.
+         */
+        MyMouseInputAdapter() {
+            super();
+            myTempScoreBoard = new JFrame();
+            myTempScoreBoard.setFocusableWindowState(false);
+            myTempScoreBoard.setFocusable(false);
+        }
+        
+        /**
+         * the method fires when the mouse's button is pressed.
+         */
+        @Override
+        public void mousePressed(final MouseEvent theEvent) {
+            
+            // get the score board, get it's on screen x and y and invisible it.
+            final ScoreBoard scoreBoard = (ScoreBoard) theEvent.getComponent().getParent();
+            final int x = scoreBoard.getLocationOnScreen().x;
+            final int y = scoreBoard.getLocationOnScreen().y;
+            scoreBoard.setVisible(false);
+            
+            if (PLAYER_LIST[1].equals(scoreBoard.getMyPlayerName())) {
+                myTempScoreBoard.add(myExtraScorePanel);
+            } else {
+                myTempScoreBoard.add(myExtraPlayerTwoScorePanel);
+                
+            }
+
+            // pop up as a new score board.
+            myTempScoreBoard.setLocation(x, y);
+            myTempScoreBoard.setPreferredSize(scoreBoard.getPreferredSize());
+            myTempScoreBoard.setVisible(true);
+            myTempScoreBoard.addWindowListener(new WindowAction(scoreBoard));
+            myTempScoreBoard.setAlwaysOnTop(true);
+            myTempScoreBoard.pack();
+        }
+        
+        /**
+         * the window event.
+         * @author Ruitao Yu
+         * @version December 5 2017
+         *
+         */
+        class WindowAction extends WindowAdapter {
+            
+            /** the window that need to be handle. */
+            private final ScoreBoard myPanel;
+            
+            /**
+             * the constructor.
+             * @param thePanel the panel that need to be handle
+             */
+            WindowAction(final ScoreBoard thePanel) {
+                super();
+                myPanel = thePanel;
+            }
+            @Override
+            public void windowClosing(final WindowEvent theEvent) {
+                myPanel.setVisible(true);
+            }
+            
+            @Override
+            public void windowClosed(final WindowEvent theEvent) {
+                myTempScoreBoard.dispatchEvent(new WindowEvent(myTempScoreBoard
+                                                             , WindowEvent.WINDOW_CLOSING));
+            }
+        }
+    }
+}

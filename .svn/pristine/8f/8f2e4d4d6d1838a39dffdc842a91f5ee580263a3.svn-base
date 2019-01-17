@@ -1,0 +1,281 @@
+package view;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JFrame;
+
+import model.TetrisPiece;
+
+
+public class TempScoreBoard extends JFrame implements Observer{
+    
+    /** the number of square in a row. */
+    public static final int FOUR_LINE = 1200;
+    
+    /** the number of square in a row. */
+    public static final int THREE_LINE = 300;
+    
+    /** the number of square in a row. */
+    public static final int TWO_LINE = 100;
+    
+    /** the number of square in a row. */
+    public static final int ONE_LINE = 40;
+    
+    /** the number of square in a row. */
+    public static final int NUM_OF_SAUARE = 10;
+    
+    /** the number of buttons that can be modified. */
+    public static final int NUM_OF_BUTTONS = 5;
+    
+    /** serials number.  */
+    private static final long serialVersionUID = -6732855400982984929L;
+
+    /** the GUI of this game.*/
+    private final TetrisGUI myGUI;
+
+
+    /** the width of this panel. */
+    private int myWidth;
+    
+    /** the height of this panel. */
+    private int myHeight;
+    
+    /** the font size. */
+    private int myFontSize;
+    
+    /** the list of the control buttons's text. */
+    private  String[] myTexts = new String[NUM_OF_BUTTONS];
+    
+    /** the score of the game. */
+    private int myScore;
+
+    /** the lines that have been canceled. */
+    private int myCancelLine;
+
+    /** the level of the game. */
+    private int myLevel;
+
+    /** the score that need to level up. */
+    private int myToLevelUp;
+    
+    /** the count for score. */
+    private int myCount;
+
+    /** the highest score. */
+    private int myHighestScore;
+    
+    /** the name represent the winner. */
+    private final String myPlayerName;
+    
+
+    
+    public TempScoreBoard(TetrisGUI myGUI2, int myCount2, int myScore2, int myCancelLine2
+                          , int myLevel2, int myToLevelUp2, String myPlayerName2
+                          , String[] myTexts2, int myWidth2, int myHeight2, int myFontSize2) {
+        super("Scorce Board");
+        myGUI = myGUI2;
+        myCount = myCount2;
+        myScore = myScore2;
+        myCancelLine = myCancelLine2;
+        myLevel = myLevel2;
+        myToLevelUp = myToLevelUp2;
+        myPlayerName = myPlayerName2;
+        myTexts = myTexts2;
+        myWidth = myWidth2;
+        myHeight = myHeight2;
+        myFontSize = myFontSize2;
+    }
+    
+//    @Override
+//    public void paintComponents(Graphics theG) {
+//        // TODO Auto-generated method stub
+//        super.paintComponents(theG);
+//        
+//     // TODO Auto-generated method stub
+//        System.out.println("it paints");
+//        System.out.println(myScore);
+//        System.out.println(myCancelLine);
+//        System.out.println(myLevel);
+//        System.out.println(myToLevelUp);
+//        System.out.println(")()()()()()()()(");
+//        
+//        final String notation = ", ";
+//        // update the text of the game tutorial
+//        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+//        
+//        theG.drawString("SCORE: " + myScore, myFontSize, (myHeight / 2 / NUM_OF_SAUARE));
+//        theG.drawString("LINE CANCELED: " + myCancelLine, myFontSize
+//                        , (myHeight / 2 / NUM_OF_SAUARE) * 2);
+//        theG.drawString("LEVEL: " + myLevel, myFontSize
+//                        , (myHeight / 2 / NUM_OF_SAUARE) * 3);
+//        theG.drawString("LINES TO LEVEL UP: " + myToLevelUp, myFontSize
+//                        , (myHeight / 2 / NUM_OF_SAUARE) * 4);
+//        
+//        
+//        theG.drawString("Stop game: p, P"
+//                        ,  myFontSize, myHeight / 2 / 2 + myFontSize);
+//        theG.drawString("Continue game: o, O"
+//                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * 2);
+//        theG.drawString("Left: " + myTexts[2].toLowerCase(Locale.ENGLISH) 
+//                        + notation + myTexts[2] + ", Left arrow" 
+//                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 1));
+//        theG.drawString("Right: " + myTexts[2 + 1].toLowerCase(Locale.ENGLISH)
+//                        + notation + myTexts[2 + 1] + ", right arrow"
+//                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2));
+//        theG.drawString("Down: " + myTexts[1].toLowerCase(Locale.ENGLISH) 
+//                        + notation + myTexts[1] + ", down arrow" 
+//                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 1));
+//        theG.drawString("Rotate: " + myTexts[0].toLowerCase(Locale.ENGLISH) 
+//                        + notation + myTexts[0] + ", up arrow" 
+//                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 2));
+//        theG.drawString("Drop: " + myTexts[2 + 2].toLowerCase(Locale.ENGLISH) 
+//                        + notation + myTexts[2 + 2]
+//                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 2 + 1));
+//        
+//        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+//        theG.setColor(Color.BLUE);
+//        theG.drawString("Highest Score: \n" + myHighestScore, myFontSize
+//                        , myHeight/2);
+//    }
+
+    
+    @Override
+    public void paint(Graphics theG) {
+        super.paint(theG);
+        // TODO Auto-generated method stub
+        System.out.println("it paints");
+        System.out.println(myScore);
+        System.out.println(myCancelLine);
+        System.out.println(myLevel);
+        System.out.println(myToLevelUp);
+        System.out.println(myWidth);
+        System.out.println(myHeight);
+        System.out.println(myFontSize);
+        System.out.println(")()()()()()()()(");
+        
+        final String notation = ", ";
+        // update the text of the game tutorial
+        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+        
+        theG.drawString("SCORE: " + myScore, myFontSize, (myHeight / 2 / NUM_OF_SAUARE));
+        theG.drawString("LINE CANCELED: " + myCancelLine, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 2);
+        theG.drawString("LEVEL: " + myLevel, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 3);
+        theG.drawString("LINES TO LEVEL UP: " + myToLevelUp, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 4);
+        
+        
+        theG.drawString("Stop game: p, P"
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize);
+        theG.drawString("Continue game: o, O"
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * 2);
+        theG.drawString("Left: " + myTexts[2].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[2] + ", Left arrow" 
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 1));
+        theG.drawString("Right: " + myTexts[2 + 1].toLowerCase(Locale.ENGLISH)
+                        + notation + myTexts[2 + 1] + ", right arrow"
+                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2));
+        theG.drawString("Down: " + myTexts[1].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[1] + ", down arrow" 
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 1));
+        theG.drawString("Rotate: " + myTexts[0].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[0] + ", up arrow" 
+                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 2));
+        theG.drawString("Drop: " + myTexts[2 + 2].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[2 + 2]
+                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 2 + 1));
+        
+        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+        theG.setColor(Color.BLUE);
+        theG.drawString("Highest Score: \n" + myHighestScore, myFontSize
+                        , myHeight/2);
+    }
+//    @Override
+//    public void paint(Graphics g) {
+//        // TODO Auto-generated method stub
+//        super.paint(g);
+//        
+//        g.setColor(Color.BLACK);
+//        g.drawString("COPTY THIS " + myScore, 50, 50);
+//    }
+
+    /**
+     * this method call by the observable class.
+     */
+    @Override
+    public void update(final Observable theObservable, final Object theObject) {
+        // if the object is a piece
+        // update my next piece and repaint
+        if (theObject instanceof TetrisPiece) {
+            myCount++;
+            if (myCount >= 2) {
+                myScore += 4;
+            }
+            //repaint();
+            paint(getGraphics());
+        } else if (theObject instanceof Integer[]) {
+            final int lines = ((Integer[]) theObject).length;
+            updateScoreBoard(lines);
+            myCancelLine += lines;
+            if (myToLevelUp - lines <= 0) {
+                myLevel++;
+                myToLevelUp = 5 - (lines - myToLevelUp);
+                updateSpeed();
+            } else {
+                myToLevelUp -= lines;
+            }
+            //repaint();
+            paint(getGraphics());
+        }  else if (theObject instanceof Boolean) {
+            // if the object is a boolean, show a message for game over
+//            if (myScore > myHighestScore) {
+//                myHighestScore = myScore;
+//            }
+//            repaint();
+            myGUI.endGame(myPlayerName);
+        }
+    }
+    
+    private void updateSpeed() {
+        if (myGUI.isTwoPlayer()) {
+            if ("Player 1".equals(myPlayerName)) {
+                myGUI.speedUpPlayerOneTimer();
+            } else {
+                myGUI.speedUpPlayerTwoTimer();
+            }
+        } else {
+            myGUI.speedUpPlayerOneTimer();
+        }
+    }
+    
+    /**
+     * calculate the score if any line is canceled.
+     * @param theLines the number of  canceled line.
+     */
+    private void updateScoreBoard(final int theLines) {
+
+        switch (theLines) {
+            case 1:
+                myScore += ONE_LINE * myLevel;
+                break;
+            case 2:
+                myScore += TWO_LINE * myLevel;
+                break;
+            case 3:
+                myScore += THREE_LINE * myLevel;
+                break;
+            case 4:
+                myScore += FOUR_LINE * myLevel;
+                break;
+            default:
+                break;
+        }
+    }
+
+}

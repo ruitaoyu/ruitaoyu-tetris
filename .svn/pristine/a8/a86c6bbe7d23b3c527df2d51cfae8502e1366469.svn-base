@@ -1,0 +1,380 @@
+/*
+ * TCSS 305 - Assignment 6: Tetris
+ */
+package view;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import javax.swing.JPanel;
+
+/**
+ * this is the score panel of the Tetris project.
+ * @author Ruitao Yu
+ * @version December 5 2017
+ */
+public class ScoreBoard extends JPanel {
+    
+    /** the number of square in a row. */
+    public static final int FOUR_LINE = 1200;
+    
+    /** the number of square in a row. */
+    public static final int THREE_LINE = 300;
+    
+    /** the number of square in a row. */
+    public static final int TWO_LINE = 100;
+    
+    /** the number of square in a row. */
+    public static final int ONE_LINE = 40;
+    
+    /** the number of square in a row. */
+    public static final int NUM_OF_SAUARE = 10;
+    
+    /** the number of buttons that can be modified. */
+    public static final int NUM_OF_BUTTONS = 5;
+    
+    /** the number of buttons that can be modified. */
+    public static final int FIRST_INDEX = 0;
+    
+    /** the number of buttons that can be modified. */
+    public static final int SECOND_INDEX = 1;
+    
+    /** the number of buttons that can be modified. */
+    public static final int THIRD_INDEX = 2;
+    
+    /** the number of buttons that can be modified. */
+    public static final int FOURTH_INDEX = 3;
+    
+    /** the number of buttons that can be modified. */
+    public static final int FIFTH_INDEX = 4;
+    
+    /** the number of buttons that can be modified. */
+    public static final int SMALL_FONTSIZE = 12;
+    
+    /** the number of buttons that can be modified. */
+    public static final int MIDIUM_FONTSIZE = 17;
+    
+    /** the number of buttons that can be modified. */
+    public static final int LARGE_FONTSIZE = 23;
+    
+    /** divides the current window height to 25. */
+    public static final int DIVID_HEIGHT = 25;
+    
+    /** the number of buttons that can be modified. */
+    public static final int MIDIUM_WIN = 700;
+    
+    /** the number of buttons that can be modified. */
+    public static final int SMALL_WIN = 500;
+    
+    /** the number of points. */
+    public static final int DIVIDS_TO_3 = 3;
+    
+    /** serials number. */
+    private static final long serialVersionUID = -6732855400982984929L;
+
+    /** the GUI of this game.*/
+    private final TetrisGUI myGUI;
+
+    /** the width of this panel. */
+    private int myWidth;
+    
+    /** the height of this panel. */
+    private int myHeight;
+    
+    /** the font size. */
+    private int myFontSize;
+    
+    /** the list of the control buttons's text. */
+    private final String[] myTexts = new String[NUM_OF_BUTTONS];
+    
+    /** the score of the game. */
+    private int myScore;
+
+    /** the lines that have been canceled. */
+    private int myCancelLine;
+
+    /** the level of the game. */
+    private int myLevel;
+
+    /** the lines we need to level up. */
+    private int myToLevelUp;
+    
+    /** the count for score. */
+    private int myCount;
+
+    /** the highest score. */
+    private int myHighestScore;
+    
+    /** the name represent the winner. */
+    private final String myPlayerName;
+    
+    /**
+     * the constructor.
+     * 
+     * @param theGUI the GUi of this game.
+     * @param theWidth the height of this panel.
+     * @param theHeight the width of this panel.
+     * @param theName the name of this board.
+     */
+    public ScoreBoard(final TetrisGUI theGUI
+                       , final int theWidth
+                       , final int theHeight
+                       , final String theName) {
+        // Initialize all fields
+        super();
+        myWidth = theWidth;
+        myHeight = theHeight;
+        myGUI = theGUI;
+        myFontSize = MIDIUM_FONTSIZE;
+        myHighestScore = 0;
+        myPlayerName = theName;
+        setUpPanel();
+    }
+    
+    /**
+     * set up the panel.
+     */
+    private void setUpPanel() {
+        // Initialize all variables
+        setPreferredSize(new Dimension(myHeight / DIVIDS_TO_3
+                                       , myHeight - (myHeight / DIVIDS_TO_3)));
+        setBackground(Color.gray);
+        resetAllScore();
+    }
+    
+    /**
+     * set the direction indication.
+     * @param theRotate the key can make piece rotate
+     * @param theDown the key can make piece go down
+     * @param theLeft the key can make piece go left
+     * @param theRight the key can make piece go right
+     * @param theDrop the key can make piece drop
+     */
+    public void setText(final String theRotate
+                        , final String theDown
+                        , final String theLeft
+                        , final String theRight
+                        , final String theDrop) {
+        myTexts[FIRST_INDEX] = theRotate;
+        myTexts[SECOND_INDEX] = theDown;
+        myTexts[THIRD_INDEX] = theLeft;
+        myTexts[FOURTH_INDEX] = theRight;
+        myTexts[FIFTH_INDEX] = theDrop;
+    }
+    
+    
+    /**
+     * reset the window size.
+     * @param theWidth the new width of the panel
+     * @param theHeight the new height of the panel
+     */
+    public void setWinSize(final int theWidth, final int theHeight) {
+        // update the filed and reset the button size
+        // set to a size which the user selected in the menu bar
+        myWidth = theWidth;
+        myHeight = theHeight;
+        setPreferredSize(new Dimension(myHeight / DIVIDS_TO_3
+                                       , myHeight - (myHeight / DIVIDS_TO_3)));
+        
+        if (myHeight == SMALL_WIN) {
+            myFontSize = SMALL_FONTSIZE;
+        } else if (myHeight == MIDIUM_WIN) {
+            myFontSize = MIDIUM_FONTSIZE;
+        } else {
+            myFontSize = LARGE_FONTSIZE;
+        }
+        repaint();
+    }
+    
+    /**
+     * change the text list.
+     * @param theIndex the index of the list
+     * @param theName the new text
+     */
+    public void changeText(final int theIndex, final String theName) {
+        myTexts[theIndex] = theName;
+        repaint();
+    }
+
+    /**
+     * repaint the panel.
+     */
+    @Override
+    protected void paintComponent(final Graphics theG) {
+        // draw string that teaches user how to control the game
+        // display a highest score
+        super.paintComponent(theG);
+        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+        theG.drawRect(myWidth / DIVID_HEIGHT
+                      , myWidth / DIVID_HEIGHT
+                      , myWidth / DIVID_HEIGHT * (NUM_OF_SAUARE + NUM_OF_BUTTONS)
+                      , myWidth / DIVID_HEIGHT * NUM_OF_SAUARE);
+        
+        theG.drawString("SCORE: " + myScore, myFontSize
+                        , myHeight / 2 / NUM_OF_SAUARE);
+        theG.drawString("LINE CANCELED: " + myCancelLine, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 2);
+        theG.drawString("LEVEL: " + myLevel, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * FOURTH_INDEX);
+        theG.drawString("LINES TO LEVEL UP: " + myToLevelUp, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * FIFTH_INDEX);
+        
+        theG.drawString("Mute: M",  myFontSize, getHeight() / 2 - (myFontSize * FOURTH_INDEX));
+        theG.drawString("Stop game: P",  myFontSize, getHeight() / 2 - myFontSize);
+        theG.drawString("Continue game: O",  myFontSize, myHeight / FIFTH_INDEX
+                        + myFontSize * FIFTH_INDEX);
+        theG.drawString("Left: " + myTexts[THIRD_INDEX]
+                        ,  myFontSize
+                        , myHeight / FIFTH_INDEX + myFontSize * (FOURTH_INDEX * 2));
+        theG.drawString("Right: " + myTexts[FOURTH_INDEX]
+                        , myFontSize
+                        , myHeight / FIFTH_INDEX + myFontSize * (FIFTH_INDEX * 2));
+        theG.drawString("Down: " + myTexts[SECOND_INDEX]
+                        ,  myFontSize
+                        , myHeight / FIFTH_INDEX + myFontSize * NUM_OF_SAUARE);
+        theG.drawString("Rotate: " + myTexts[FIRST_INDEX]
+                        , myFontSize
+                        , myHeight / FIFTH_INDEX + myFontSize * SMALL_FONTSIZE);
+        theG.drawString("Drop: " + myTexts[FIFTH_INDEX]
+                        , myFontSize
+                        , myHeight / FIFTH_INDEX + myFontSize
+                        * (FOURTH_INDEX + FIFTH_INDEX) * 2);
+        
+        theG.setColor(Color.BLUE);
+        theG.drawString("Highest Score: \n" + myHighestScore, myFontSize
+                        , getHeight() - myFontSize);
+    }
+    
+    /**
+     * 
+     */
+    private void updateSpeed() {
+        // if one player is level up, the other player's timer is faster
+        if (myGUI.isTwoPlayer()) {
+            if ("Player 1".equals(myPlayerName)) {
+                myGUI.speedUpPlayerOneTimer();
+            } else {
+                myGUI.speedUpPlayerTwoTimer();
+            }
+        } else {
+            myGUI.speedUpPlayerOneTimer();
+        }
+    }
+    
+    /**
+     * @return the myScore
+     */
+    public int getMyScore() {
+        return myScore;
+    }
+
+    /**
+     * @return the myHighestScore
+     */
+    public int getMyHighestScore() {
+        return myHighestScore;
+    }
+
+    /**
+     * set the highest score to a new one.
+     * @param theHighestScore the myHighestScore to set
+     */
+    public void setMyHighestScore(final int theHighestScore) {
+        myHighestScore = theHighestScore;
+    }
+
+    
+    /**
+     * set all the score scouting fields to 0.
+     */
+    public final void resetAllScore() {
+        myCount = 0;
+        myScore = 0;
+        myCancelLine = 0;
+        myLevel = 1;
+        myToLevelUp = myGUI.getDefaultLineToLevel();
+    }
+    /**
+     * @return the myLevel
+     */
+    public int getMyLevel() {
+        return myLevel;
+    }
+
+    /**
+     * @return the myToLevelUp
+     */
+    public int getMyToLevelUp() {
+        return myToLevelUp;
+    }
+
+    /**
+     * @return the myCount
+     */
+    public int getMyCount() {
+        return myCount;
+    }
+
+    /**
+     * @return the myPlayerName
+     */
+    public String getMyPlayerName() {
+        return myPlayerName;
+    }
+
+    /**
+     * setter of my score.
+     * @param theScore the myScore to set
+     */
+    public void setMyScore(final int theScore) {
+        myScore = theScore;
+    }
+
+    /**
+     * level up.
+     */
+    public void setMyLevel() {
+        // get the former level
+        // compare to the new level
+        // update the differ of new and old value times speed
+        final int temp = myLevel;
+        myLevel = myCancelLine / myGUI.getDefaultLineToLevel() + 1;
+        for (int i = 0; i < temp; i++) {
+            updateSpeed();
+        }
+    }
+
+    /**
+     * update the lines that need to be canceled to level up.
+     */
+    public void setMyToLevelUp() {
+        // get the remainder of the cleared line Modulo default lines to level up
+        myToLevelUp = myGUI.getDefaultLineToLevel() 
+                        - (myCancelLine % myGUI.getDefaultLineToLevel());
+    }
+
+    /**
+     * count the number of piece we got so far.
+     * @param theCount the myCount to set
+     */
+    public void setMyCount(final int theCount) {
+        this.myCount = theCount;
+    }
+
+    /**
+     * @return the myCancelLine
+     */
+    public int getMyCancelLine() {
+        return myCancelLine;
+    }
+
+    /**
+     * @param theCancelLine the myCancelLine to set
+     */
+    public void setMyCancelLine(final int theCancelLine) {
+        myCancelLine += theCancelLine;
+    }
+
+
+}

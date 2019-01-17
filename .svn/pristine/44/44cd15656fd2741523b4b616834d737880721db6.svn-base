@@ -1,0 +1,308 @@
+/**
+ * 
+ */
+package view;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.event.MouseInputAdapter;
+
+import model.TetrisPiece;
+
+/**
+ * this is the score panel of the Tetris project.
+ * it creates buttons to control the game.
+ * 
+ * @author Ruitao Yu
+ * @version November 18 2017
+ *
+ */
+public class ScoreBoard extends JPanel{
+    
+    /** the number of square in a row. */
+    public static final int FOUR_LINE = 1200;
+    
+    /** the number of square in a row. */
+    public static final int THREE_LINE = 300;
+    
+    /** the number of square in a row. */
+    public static final int TWO_LINE = 100;
+    
+    /** the number of square in a row. */
+    public static final int ONE_LINE = 40;
+    
+    /** the number of square in a row. */
+    public static final int NUM_OF_SAUARE = 10;
+    
+    /** the number of buttons that can be modified. */
+    public static final int NUM_OF_BUTTONS = 5;
+    
+    /** serials number.  */
+    private static final long serialVersionUID = -6732855400982984929L;
+
+    /** the GUI of this game.*/
+    private final TetrisGUI myGUI;
+
+    /** the width of this panel. */
+    private int myWidth;
+    
+    /** the height of this panel. */
+    private int myHeight;
+    
+    /** the font size. */
+    private int myFontSize;
+    
+    /** the list of the control buttons's text. */
+    private final String[] myTexts = new String[NUM_OF_BUTTONS];
+    
+    /** the score of the game. */
+    private int myScore;
+
+    /** the lines that have been canceled. */
+    private int myCancelLine;
+
+    /** the level of the game. */
+    private int myLevel;
+
+    /** the score that need to level up. */
+    private int myToLevelUp;
+    
+    /** the count for score. */
+    private int myCount;
+
+    /** the highest score. */
+    private int myHighestScore;
+    
+    /** the name represent the winner. */
+    private final String myPlayerName;
+    
+    /**
+     * the constructor.
+     * 
+     * @param theGUI the GUi of this game.
+     * @param theWidth the height of this panel.
+     * @param theHeight the width of this panel.
+     */
+    public ScoreBoard(final TetrisGUI theGUI
+                       , final int theWidth
+                       , final int theHeight
+                       , final String theName) {
+        super();
+        myWidth = theWidth;
+        myHeight = theHeight;
+        myGUI = theGUI;
+        myFontSize = myHeight / 3 / 13;
+        myHighestScore = 0;
+        myPlayerName = theName;
+        setUpPanel();
+        
+    }
+    
+    /**
+     * set up the panel.
+     */
+    private void setUpPanel() {
+        // Initialize all variables
+        setPreferredSize(new Dimension(myHeight / 3, myHeight - (myHeight / 3)));
+        setBackground(Color.gray);
+
+        myTexts[0] = "W";
+        myTexts[1] = "S";
+        myTexts[2] = "A";
+        myTexts[2 + 1] = "D";
+        myTexts[2 + 2] = "SPACE";
+        resetAllScore();
+    }
+    
+    
+    /**
+     * reset the window size.
+     * @param theWidth the new width of the panel
+     * @param theHeight the new height of the panel
+     */
+    public void setWinSize(final int theWidth, final int theHeight) {
+        // update the filed and reset the button size
+        myWidth = theWidth;
+        myHeight = theHeight;
+        setPreferredSize(new Dimension(myHeight / 3, myHeight - (myHeight / 3)));
+        myFontSize = myHeight / 3 / 13;
+    }
+    
+    /**
+     * change the text list.
+     * @param theIndex the index of the list
+     * @param theName the new text
+     */
+    public void changeText(final int theIndex, final String theName) {
+        myTexts[theIndex] = theName;
+        repaint();
+    }
+
+    /**
+     * repaint the panel.
+     */
+    @Override
+    protected void paintComponent(final Graphics theG) {
+        super.paintComponent(theG);
+        
+        final String notation = ", ";
+        // update the text of the game tutorial
+        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+        theG.drawRect(myWidth / 25, myWidth / 25 , myWidth / 25 * 14, myWidth / 25 * 10);
+        
+        theG.drawString("SCORE: " + myScore, myFontSize, (myHeight / 2 / NUM_OF_SAUARE));
+        theG.drawString("LINE CANCELED: " + myCancelLine, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 2);
+        theG.drawString("LEVEL: " + myLevel, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 3);
+        theG.drawString("LINES TO LEVEL UP: " + myToLevelUp, myFontSize
+                        , (myHeight / 2 / NUM_OF_SAUARE) * 4);
+        
+        
+        theG.drawString("Stop game: p, P"
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize);
+        theG.drawString("Continue game: o, O"
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * 2);
+        theG.drawString("Left: " + myTexts[2].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[2] + ", Left arrow" 
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 1));
+        theG.drawString("Right: " + myTexts[2 + 1].toLowerCase(Locale.ENGLISH)
+                        + notation + myTexts[2 + 1] + ", right arrow"
+                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2));
+        theG.drawString("Down: " + myTexts[1].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[1] + ", down arrow" 
+                        ,  myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 1));
+        theG.drawString("Rotate: " + myTexts[0].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[0] + ", up arrow" 
+                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 2));
+        theG.drawString("Drop: " + myTexts[2 + 2].toLowerCase(Locale.ENGLISH) 
+                        + notation + myTexts[2 + 2]
+                        , myFontSize, myHeight / 2 / 2 + myFontSize * (2 + 2 + 2 + 1));
+        
+        theG.setFont(new Font("TimesRoman", Font.BOLD, myFontSize));
+        theG.setColor(Color.BLUE);
+        theG.drawString("Highest Score: \n" + myHighestScore, myFontSize
+                        , myHeight/2);
+    }
+    
+    /**
+     * 
+     */
+    private void updateSpeed() {
+        if (myGUI.isTwoPlayer()) {
+            if ("Player 1".equals(myPlayerName)) {
+                myGUI.speedUpPlayerOneTimer();
+            } else {
+                myGUI.speedUpPlayerTwoTimer();
+            }
+        } else {
+            myGUI.speedUpPlayerOneTimer();
+        }
+    }
+    
+    /**
+     * @return the myScore
+     */
+    public int getMyScore() {
+        return myScore;
+    }
+
+    /**
+     * @return the myHighestScore
+     */
+    public int getMyHighestScore() {
+        return myHighestScore;
+    }
+
+    /**
+     * set the highest score to a new one.
+     * @param theHighestScore the myHighestScore to set
+     */
+    public void setMyHighestScore(final int theHighestScore) {
+        myHighestScore = theHighestScore;
+    }
+
+    
+    /**
+     * set the score to 0.
+     */
+    public final void resetAllScore() {
+        myCount = 0;
+        myScore = 0;
+        myCancelLine = 0;
+        myLevel = 1;
+        myToLevelUp = 5;
+    }
+    /**
+     * @return the myLevel
+     */
+    public int getMyLevel() {
+        return myLevel;
+    }
+
+    /**
+     * @return the myToLevelUp
+     */
+    public int getMyToLevelUp() {
+        return myToLevelUp;
+    }
+
+    /**
+     * @return the myCount
+     */
+    public int getMyCount() {
+        return myCount;
+    }
+
+    /**
+     * @return the myPlayerName
+     */
+    public String getMyPlayerName() {
+        return myPlayerName;
+    }
+
+    /**
+     * setter of my score.
+     * @param theScore the myScore to set
+     */
+    public void setMyScore(final int theScore) {
+        myScore = theScore;
+    }
+
+    /**
+     * @param myLevel the myLevel to set
+     */
+    public void setMyLevel(int myLevel) {
+        this.myLevel = myLevel;
+        updateSpeed();
+    }
+
+    /**
+     * @param myToLevelUp the myToLevelUp to set
+     */
+    public void setMyToLevelUp(int myToLevelUp) {
+        this.myToLevelUp = myToLevelUp;
+    }
+
+    /**
+     * @param myCount the myCount to set
+     */
+    public void setMyCount(int myCount) {
+        this.myCount = myCount;
+    }
+
+
+}
